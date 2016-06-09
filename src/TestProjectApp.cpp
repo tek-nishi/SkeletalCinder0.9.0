@@ -18,11 +18,6 @@ using namespace ci::app;
 
 
 class AssimpApp : public App {
-  enum {
-    WINDOW_WIDTH  = 800,
-    WINDOW_HEIGHT = 600,
-  };
-
   // 投影変換をおこなうカメラを定義
   // 透視投影（Perspective）
   CameraPersp camera_persp;
@@ -82,8 +77,6 @@ class AssimpApp : public App {
 
 
 public:
-  void prepareSettings(Settings* settings);
-
   void setup();
   void shutdown();
 
@@ -236,23 +229,13 @@ void AssimpApp::drawDialog() {
 #endif
 
 
-void AssimpApp::prepareSettings(Settings* settings) {
-  // 画面サイズを変更する
-  settings->setWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-  // Retinaディスプレイ有効
-  // settings->enableHighDensityDisplay();
-
-  // マルチタッチ有効
-  touch_num = 0;
-  // settings->enableMultiTouch();
-}
-
 void AssimpApp::setup() {
 #if defined (CINDER_COCOA_TOUCH)
   // 縦横画面両対応
   getSignalSupportedOrientations().connect([]() { return ci::app::InterfaceOrientation::All; });
 #endif
 
+  touch_num = 0;
   // アクティブになった時にタッチ情報を初期化
   getSignalDidBecomeActive().connect([this](){ touch_num = 0; });
 
@@ -606,4 +589,18 @@ void AssimpApp::draw() {
 }
 
 
-CINDER_APP(AssimpApp, RendererGl())
+// FIXME:なんかいくない
+enum {
+  WINDOW_WIDTH  = 800,
+  WINDOW_HEIGHT = 600,
+};
+
+CINDER_APP(AssimpApp, RendererGl(), [](App::Settings* settings){
+    // 画面サイズを変更する
+    settings->setWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+    // Retinaディスプレイ有効
+    settings->setHighDensityDisplayEnabled(true);
+
+    // マルチタッチ有効
+    settings->setMultiTouchEnabled(true);
+  })
