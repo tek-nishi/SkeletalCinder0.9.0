@@ -514,7 +514,7 @@ void AssimpApp::touchesMoved(TouchEvent event) {
     vec2 d{ touches[0].getPos() -  touches[0].getPrevPos() };
     float l = length(d);
     if (l > 0.0f) {
-      normalize(d);
+      d = normalize(d);
       vec3 v(d.y, d.x, 0.0f);
       quat r = glm::angleAxis(l * 0.01f, v);
       rotate = r * rotate;
