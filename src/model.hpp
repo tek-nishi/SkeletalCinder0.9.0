@@ -33,11 +33,18 @@
 
 #include "common.hpp"
 #include "mesh.hpp"
+#include "material.hpp"
+#include "texture.hpp"
 #include "node.hpp"
 #include "animation.hpp"
 
 
 struct Model {
+  std::vector<Material> material;
+
+  // マテリアルからのテクスチャ参照は名前引き
+  std::map<std::string, ci::gl::Texture2dRef> textures;
+
   // 親子関係にあるノード
   std::shared_ptr<Node> node;
 
@@ -52,6 +59,11 @@ struct Model {
 
   ci::AxisAlignedBox aabb;
 
+  // FIXME:ここで持つべきではない
+  
+
+
+  
 #if defined (USE_FULL_PATH)
   // 読み込みディレクトリ
   std::string directory;
@@ -268,7 +280,6 @@ Model loadModel(const std::string& path) {
 
   const aiScene* scene = importer.ReadFile(path,
                                            aiProcess_Triangulate
-                                           | aiProcess_FlipUVs
                                            | aiProcess_JoinIdenticalVertices
                                            | aiProcess_OptimizeMeshes
                                            | aiProcess_RemoveRedundantMaterials);
@@ -283,7 +294,6 @@ Model loadModel(const std::string& path) {
   model.directory = full_path.parent_path().string();
 #endif
 
-#if 0
   if (scene->HasMaterials()) {
     u_int num = scene->mNumMaterials;
     ci::app::console() << "Materials:" << num << std::endl;
@@ -306,7 +316,6 @@ Model loadModel(const std::string& path) {
       model.textures.insert(std::make_pair(m.texture_name, texture));
     }
   }
-#endif
 
   model.node = createNode(scene->mRootNode, scene->mMeshes);
 
@@ -341,14 +350,24 @@ Model loadModel(const std::string& path) {
 
 // モデル描画
 // TIPS:全ノード最終的な行列が計算されているので、再帰で描画する必要は無い
-void drawModel(const Model& model) {
+void drawModel(const Model& model,
+               const ci::gl::GlslProgRef& color, const ci::gl::GlslProgRef& texture) {
   for (const auto& node : model.node_list) {
     if (node->mesh.empty()) continue;
-    
     ci::gl::pushModelView();
     ci::gl::multModelMatrix(node->global_matrix);
 
     for (const auto& mesh : node->mesh) {
+      const auto& material = model.material[mesh.material_index];
+
+      if (material.has_texture) {
+        model.textures.at(material.texture_name)->bind();
+        texture->bind();
+      }
+      else {
+        color->bind();
+      }
+
       ci::gl::draw(mesh.body);
     }
     ci::gl::popModelView();

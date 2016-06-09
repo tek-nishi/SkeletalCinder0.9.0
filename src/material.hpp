@@ -13,13 +13,15 @@
 struct Material {
   Material()
     : has_texture(false)
-  {
-    // FIXME:OpenGL ES対策
-    body.setFace(GL_FRONT_AND_BACK);
-  }
-  
-  ci::Material body;
+  { }
 
+  ci::ColorA diffuse;
+  ci::ColorA ambient;
+  ci::ColorA specular;
+  float shininess;
+  ci::ColorA emission;
+  
+  
   bool has_texture;
   std::string texture_name;
 };
@@ -32,29 +34,27 @@ Material createMaterial(const aiMaterial* const mat) {
   {
     aiColor3D color;
     mat->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-    material.body.setDiffuse(fromAssimp(color));
+    material.diffuse = fromAssimp(color);
   }
 
   {
     aiColor3D color;
     mat->Get(AI_MATKEY_COLOR_AMBIENT, color);
-    material.body.setAmbient(fromAssimp(color));
+    material.ambient = fromAssimp(color);
   }
 
   {
     aiColor3D color;
     mat->Get(AI_MATKEY_COLOR_SPECULAR, color);
-    material.body.setSpecular(fromAssimp(color));
+    material.specular = fromAssimp(color);
   }
 
-  float shininess = 80.0f;
-  mat->Get(AI_MATKEY_SHININESS, shininess);
-  material.body.setShininess(shininess);
+  mat->Get(AI_MATKEY_SHININESS, material.shininess);
 
   {
     aiColor3D color;
     mat->Get(AI_MATKEY_COLOR_EMISSIVE, color);
-    material.body.setEmission(fromAssimp(color));
+    material.emission = fromAssimp(color);
   }
 
   aiString tex_name;
@@ -63,11 +63,11 @@ Material createMaterial(const aiMaterial* const mat) {
     material.texture_name = getFilename(std::string(tex_name.C_Str()));
   }
 
-  ci::app::console() << "Diffuse:"   << material.body.getDiffuse()   << std::endl;
-  ci::app::console() << "Ambient:"   << material.body.getAmbient()   << std::endl;
-  ci::app::console() << "Specular:"  << material.body.getSpecular()  << std::endl;
-  ci::app::console() << "Shininess:" << material.body.getShininess() << std::endl;
-  ci::app::console() << "Emission:"  << material.body.getEmission()  << std::endl;
+  ci::app::console() << "Diffuse:"   << material.diffuse   << std::endl;
+  ci::app::console() << "Ambient:"   << material.ambient   << std::endl;
+  ci::app::console() << "Specular:"  << material.specular  << std::endl;
+  ci::app::console() << "Shininess:" << material.shininess << std::endl;
+  ci::app::console() << "Emission:"  << material.emission  << std::endl;
   if (material.has_texture) {
     ci::app::console() << "Texture:" << material.texture_name << std::endl;
   }

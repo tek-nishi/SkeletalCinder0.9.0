@@ -13,7 +13,7 @@
 
 
 // テクスチャを読み込む
-ci::gl::TextureRef loadTexrture(const std::string& path) {
+ci::gl::Texture2dRef loadTexrture(const std::string& path) {
   ci::app::console() << "Texture read:" << path << std::endl;
 
 #if defined (USE_FULL_PATH)
@@ -33,9 +33,9 @@ ci::gl::TextureRef loadTexrture(const std::string& path) {
 
   if ((w != pow_w) || (h != pow_h)) {
     // リサイズ
-    surface = ci::ip::resizeCopy(surface, ci::Area{0, 0, w - 1, h - 1}, ci::Vec2i{pow_w, pow_h});
+    surface = ci::ip::resizeCopy(surface, ci::Area{0, 0, w - 1, h - 1}, ci::ivec2{pow_w, pow_h});
     ci::app::console() << "Texture resize: " << w << "," << h << " -> " << pow_w << "," << pow_h << std::endl;
   }
 
-  return ci::gl::Texture::create(surface);
+  return ci::gl::Texture2d::create(surface);
 }

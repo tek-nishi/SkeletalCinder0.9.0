@@ -39,6 +39,9 @@ class AssimpApp : public App {
   vec3 translate;
   float z_distance;
 
+  gl::GlslProgRef shader_color;
+  gl::GlslProgRef shader_texture;
+  
   Model model;
   vec3 offset;
 
@@ -56,7 +59,7 @@ class AssimpApp : public App {
   bool disp_reverse;
 
   Color bg_color;
-  // gl::Texture bg_image;
+  gl::Texture2dRef bg_image;
 
   std::string settings;
 
@@ -135,6 +138,9 @@ void AssimpApp::setupCamera() {
 
   z_distance = distance;
 
+  rotate     = glm::angleAxis(0.0f, vec3(0.0f, 1.0f, 0.0f));
+  translate  = vec3();
+
   // NearクリップとFarクリップを決める
   float size = length(model.aabb.getSize());
   near_z = size * 0.01f;
@@ -149,6 +155,8 @@ void AssimpApp::setupCamera() {
 
 // グリッド描画
 void AssimpApp::drawGrid() {
+  gl::ScopedGlslProg shader(gl::getStockShader(gl::ShaderDef().color()));
+
   gl::lineWidth(1.0f);
 
   for (int x = -5; x <= 5; ++x) {
@@ -235,6 +243,8 @@ void AssimpApp::setup() {
   getSignalSupportedOrientations().connect([]() { return ci::app::InterfaceOrientation::All; });
 #endif
 
+  gl::enableVerticalSync(true);
+  
   touch_num = 0;
   // アクティブになった時にタッチ情報を初期化
   getSignalDidBecomeActive().connect([this](){ touch_num = 0; });
@@ -306,11 +316,17 @@ void AssimpApp::setup() {
 #endif
 
   bg_color = Color(0.7f, 0.7f, 0.7f);
-  // bg_image = loadImage(loadAsset("bg.png"));
+  bg_image = gl::Texture2d::create(loadImage(loadAsset("bg.png")));
 
   two_sided = false;
   disp_reverse = false;
 
+
+  // シェーダー
+  shader_color   = gl::getStockShader(gl::ShaderDef().color().lambert());
+  shader_texture = gl::getStockShader(gl::ShaderDef().texture().lambert());
+
+  
   // ダイアログ作成
   createDialog();
   
@@ -553,21 +569,14 @@ void AssimpApp::update() {
 void AssimpApp::draw() {
   gl::clear(Color(0.0f, 0.0f, 0.0f));
 
-#if 0
   // 背景描画
   gl::setMatrices(camera_ui);
 
   gl::disableDepthRead();
   gl::disableDepthWrite();
-
-  gl::translate(0.0f, 0.0f, -2.0f);
-
-  bg_image.enableAndBind();
   gl::color(bg_color);
-  gl::drawSolidRect(Rectf(0.0f, 0.0f, 1.0f, 1.0f));
-  bg_image.unbind();
-  bg_image.disable();
-#endif
+  gl::translate(0.0f, 0.0f, -2.0f);
+  gl::draw(bg_image, Rectf{ 0.0f, 0.0f, 1.0f, 1.0f });
 
   // モデル描画
   gl::setMatrices(camera_persp);
@@ -580,7 +589,8 @@ void AssimpApp::draw() {
   gl::rotate(rotate);
 
   gl::translate(offset);
-  drawModel(model);
+  drawModel(model,
+            shader_color, shader_texture);
 
   if (do_disp_grid) drawGrid();
 
