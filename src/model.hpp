@@ -369,6 +369,11 @@ void drawModel(const Model& model,
       }
 
       ci::gl::draw(mesh.body);
+
+      if (material.has_texture) {
+        model.textures.at(material.texture_name)->unbind();
+      }
+      
     }
     ci::gl::popModelView();
   }

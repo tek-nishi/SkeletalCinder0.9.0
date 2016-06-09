@@ -274,27 +274,6 @@ void AssimpApp::setup() {
   camera_persp.setViewDirection(vec3{ 0.0f, 0.0f, -1.0f });
 
   rotate = glm::angleAxis(0.0f, vec3(0.0f, 1.0f, 0.0f));
-  
-#if 0
-  if (scene.camera.size() > 0) {
-    fov    = scene.camera[0].fov;
-    near_z = scene.camera[0].near_z;
-    far_z  = scene.camera[0].far_z;
-
-    camera_matrix = scene.camera[0].matrix;
-
-    camera_persp.lookAt(scene.camera[0].eye_pos,
-                        scene.camera[0].look_at,
-                        scene.camera[0].up);
-
-    console() << "   eye:" << scene.camera[0].eye_pos << std::endl
-              << "    at:" << scene.camera[0].look_at << std::endl
-              << "    up:" << scene.camera[0].up      << std::endl
-              << "   fov:" << scene.camera[0].fov     << std::endl
-              << "near_z:" << scene.camera[0].near_z  << std::endl
-              << " far_z:" << scene.camera[0].far_z   << std::endl;
-  }
-#endif
 
   // UI用カメラ
   camera_ui = CameraOrtho(0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 5.0f);
@@ -318,9 +297,8 @@ void AssimpApp::setup() {
   bg_color = Color(0.7f, 0.7f, 0.7f);
   bg_image = gl::Texture2d::create(loadImage(loadAsset("bg.png")));
 
-  two_sided = false;
+  two_sided    = false;
   disp_reverse = false;
-
 
   // シェーダー
   shader_color   = gl::getStockShader(gl::ShaderDef().color().lambert());
