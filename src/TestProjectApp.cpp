@@ -301,9 +301,44 @@ void AssimpApp::setup() {
   disp_reverse = false;
 
   // シェーダー
-  shader_color   = gl::getStockShader(gl::ShaderDef().color().lambert());
-  shader_texture = gl::getStockShader(gl::ShaderDef().texture().lambert());
+  shader_color = gl::GlslProg::create(gl::GlslProg::Format()
+                                      .vertex(CI_GLSL(150,
+                                                      uniform mat4 ciModelViewProjection;
+                                                      in vec4 ciPosition;
+                                                      
+                                                      void main(void) {
+                                                        gl_Position	= ciModelViewProjection * ciPosition;
+                                                      }))
+                                      .fragment(CI_GLSL(150,
+                                                        uniform vec4 uColor;
+                                                        out vec4 oColor;
+                                                           
+                                                        void main(void) {
+                                                          oColor = uColor;
+                                                        })));
 
+  
+  shader_texture = gl::GlslProg::create(gl::GlslProg::Format()
+                                        .vertex(CI_GLSL(150,
+                                                        uniform mat4 ciModelViewProjection;
+                                                        in vec4 ciPosition;
+                                                        in vec2	ciTexCoord0;
+                                                        out vec2 TexCoord0;
+                                                        
+                                                        void main(void) {
+                                                          gl_Position	= ciModelViewProjection * ciPosition;
+                                                          TexCoord0   = ciTexCoord0;
+                                                        }))
+                                        .fragment(CI_GLSL(150,
+                                                          uniform vec4 uColor;
+                                                          uniform sampler2D	uTex0;
+                                                          
+                                                          in vec2  TexCoord0;
+                                                          out vec4 oColor;
+		
+                                                          void main(void) {
+                                                            oColor = texture( uTex0, TexCoord0 ) * uColor;
+                                                          })));
   
   // ダイアログ作成
   createDialog();
@@ -567,6 +602,11 @@ void AssimpApp::draw() {
   gl::rotate(rotate);
 
   gl::translate(offset);
+
+  shader_color->uniform("uColor", ColorAf(1, 1, 1));
+  shader_texture->uniform("uColor", ColorAf(1, 1, 1));
+  shader_texture->uniform("uTex0", 0);
+  
   drawModel(model,
             shader_color, shader_texture);
 
@@ -581,9 +621,16 @@ void AssimpApp::draw() {
 enum {
   WINDOW_WIDTH  = 800,
   WINDOW_HEIGHT = 600,
+
+#if defined (CINDER_COCOA_TOUCH)
+  MSAA_VALUE = 4,
+#else
+  MSAA_VALUE = 8,
+#endif
 };
 
-CINDER_APP(AssimpApp, RendererGl(), [](App::Settings* settings){
+// アプリのラウンチコード
+CINDER_APP(AssimpApp, RendererGl(RendererGl::Options().msaa(MSAA_VALUE)), [](App::Settings* settings) {
     // 画面サイズを変更する
     settings->setWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
     // Retinaディスプレイ有効
