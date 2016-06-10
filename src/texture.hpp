@@ -37,6 +37,5 @@ ci::gl::Texture2dRef loadTexrture(const std::string& path) {
     ci::app::console() << "Texture resize: " << w << "," << h << " -> " << pow_w << "," << pow_h << std::endl;
   }
 
-  // TIPS:上限反転して読む
-  return ci::gl::Texture2d::create(surface, ci::gl::Texture2d::Format().loadTopDown(false));
+  return ci::gl::Texture2d::create(surface);
 }

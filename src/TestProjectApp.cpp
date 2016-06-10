@@ -335,13 +335,13 @@ void AssimpApp::setup() {
                                                       out vec4 Color;
                                                       
                                                       void main(void) {
-                                                        vec4 pos;
-                                                        pos = boneMatrices[ciBoneIndex.x] * ciPosition * ciBoneWeight.x
-                                                          + boneMatrices[ciBoneIndex.y] * ciPosition * ciBoneWeight.y
-                                                          + boneMatrices[ciBoneIndex.z] * ciPosition * ciBoneWeight.z
-                                                          + boneMatrices[ciBoneIndex.w] * ciPosition * ciBoneWeight.w;
+                                                        mat4 m;
+                                                        m = boneMatrices[ciBoneIndex.x] * ciBoneWeight.x
+                                                          + boneMatrices[ciBoneIndex.y] * ciBoneWeight.y
+                                                          + boneMatrices[ciBoneIndex.z] * ciBoneWeight.z
+                                                          + boneMatrices[ciBoneIndex.w] * ciBoneWeight.w;
 
-                                                        gl_Position	= ciModelViewProjection * pos;
+                                                        gl_Position	= ciModelViewProjection * m * ciPosition;
                                                         Color       = ciColor;
                                                       }))
                                       .fragment(CI_GLSL(150,
@@ -390,13 +390,13 @@ void AssimpApp::setup() {
                                                         out vec2 TexCoord0;
                                                         
                                                         void main(void) {
-                                                          vec4 pos;
-                                                          pos = boneMatrices[ciBoneIndex.x] * ciPosition * ciBoneWeight.x
-                                                            + boneMatrices[ciBoneIndex.y] * ciPosition * ciBoneWeight.y
-                                                            + boneMatrices[ciBoneIndex.z] * ciPosition * ciBoneWeight.z
-                                                            + boneMatrices[ciBoneIndex.w] * ciPosition * ciBoneWeight.w;
+                                                          mat4 m;
+                                                          m = boneMatrices[ciBoneIndex.x] * ciBoneWeight.x
+                                                            + boneMatrices[ciBoneIndex.y] * ciBoneWeight.y
+                                                            + boneMatrices[ciBoneIndex.z] * ciBoneWeight.z
+                                                            + boneMatrices[ciBoneIndex.w] * ciBoneWeight.w;
                                                           
-                                                          gl_Position	= ciModelViewProjection * pos;
+                                                          gl_Position	= ciModelViewProjection * m * ciPosition;
                                                           TexCoord0   = ciTexCoord0;
                                                         }))
                                         .fragment(CI_GLSL(150,
