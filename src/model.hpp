@@ -154,42 +154,10 @@ void updateMesh(Model& model) {
       if (!mesh.has_bone) continue;
 
       // 座標変換に必要な行列を用意
-      std::vector<ci::mat4> bone_matrix;
-      bone_matrix.reserve(mesh.bones.size());
-      for (auto& bone : mesh.bones) {
-        auto local_node = model.node_index.at(bone.name);
-        bone_matrix.push_back(node->invert_matrix * local_node->global_matrix * bone.offset);
-      }
-
-      // 変換結果を書き出す頂点配列
-      auto* body_vtx    = mesh.body.getPositions<3>();
-      auto& body_normal = mesh.body.getNormals();
-
-      size_t num = mesh.body.getNumVertices();
-      
-      std::fill(body_vtx, body_vtx + num, ci::vec3(0.0f));
-      if (mesh.body.hasNormals()) {
-        std::fill(body_normal.begin(), body_normal.end(), ci::vec3(0.0f));
-      }
-
-      // オリジナルの頂点データ
-      const auto* orig_vtx    = mesh.orig.getPositions<3>();
-      const auto& orig_normal = mesh.orig.getNormals();
-
-      // 全頂点の座標を再計算
       for (u_int i = 0; i < mesh.bones.size(); ++i) {
         const auto& bone = mesh.bones[i];
-        const auto& m    = bone_matrix[i];
-
-        for (const auto& weight : bone.weights) {
-          body_vtx[weight.vertex_id] += ci::vec3(m * ci::vec4(orig_vtx[weight.vertex_id], 1.0f)) * weight.value;
-        }
-
-        if (mesh.body.hasNormals()) {
-          for (const auto& weight : bone.weights) {
-            body_normal[weight.vertex_id] += ci::vec3(m * ci::vec4(orig_normal[weight.vertex_id], 0.0f)) * weight.value;
-          }
-        }
+        auto local_node = model.node_index.at(bone.name);
+        mesh.bone_matrices[i] = node->invert_matrix * local_node->global_matrix * bone.offset;
       }
     }
   }
@@ -214,13 +182,6 @@ void updateModel(Model& model, const double time, const size_t index) {
 
 // 全頂点を元に戻す
 void resetMesh(Model& model) {
-  for (const auto& node : model.node_list) {
-    for (auto& mesh : node->mesh) {
-      if (!mesh.has_bone) continue;
-
-      mesh.body = mesh.orig;
-    }
-  }
 }
 
 // ノードの行列をリセット
@@ -253,7 +214,7 @@ ci::AxisAlignedBox calcAABB(Model& model) {
   // 全頂点を調べてAABBの頂点座標を割り出す
   for (const auto& node : model.node_list) {
     for (const auto& mesh : node->mesh) {
-      const auto* verticies = mesh.body.getPositions<3>();
+      const auto& verticies = mesh.body.getPositions();
       size_t num = mesh.body.getNumVertices();
       for (size_t i = 0; i < num; ++i) {
         // ノードの行列でアフィン変換
@@ -279,9 +240,10 @@ Model loadModel(const std::string& path) {
   Assimp::Importer importer;
 
   const aiScene* scene = importer.ReadFile(path,
-                                           aiProcess_Triangulate
+                                             aiProcess_Triangulate
                                            | aiProcess_JoinIdenticalVertices
                                            | aiProcess_OptimizeMeshes
+                                           | aiProcess_LimitBoneWeights
                                            | aiProcess_RemoveRedundantMaterials);
 
   assert(scene);
@@ -351,7 +313,8 @@ Model loadModel(const std::string& path) {
 // モデル描画
 // TIPS:全ノード最終的な行列が計算されているので、再帰で描画する必要は無い
 void drawModel(const Model& model,
-               const ci::gl::GlslProgRef& color, const ci::gl::GlslProgRef& texture) {
+               const ci::gl::GlslProgRef& color, const ci::gl::GlslProgRef& texture,
+               const ci::gl::GlslProgRef& color_skin, const ci::gl::GlslProgRef& texture_skin) {
   for (const auto& node : model.node_list) {
     if (node->mesh.empty()) continue;
     ci::gl::pushModelView();
@@ -362,13 +325,25 @@ void drawModel(const Model& model,
 
       if (material.has_texture) {
         model.textures.at(material.texture_name)->bind();
-        texture->bind();
+        if (mesh.has_bone) {
+          texture_skin->uniform("boneMatrices", &mesh.bone_matrices[0], mesh.bone_matrices.size());
+          texture_skin->bind();
+        }
+        else {
+          texture->bind();
+        }
       }
       else {
-        color->bind();
+        if (mesh.has_bone) {
+          color_skin->uniform("boneMatrices", &mesh.bone_matrices[0], mesh.bone_matrices.size());
+          color_skin->bind();
+        }
+        else {
+          color->bind();
+        }
       }
 
-      ci::gl::draw(mesh.body);
+      ci::gl::draw(mesh.vbo_mesh);
 
       if (material.has_texture) {
         model.textures.at(material.texture_name)->unbind();
