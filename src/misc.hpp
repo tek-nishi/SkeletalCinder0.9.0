@@ -4,6 +4,10 @@
 // 雑多な処理
 //
 
+#if defined (_MSC_VER)
+#include <windows.h>
+#endif
+
 #include <string>
 
 #if defined (_MSC_VER)

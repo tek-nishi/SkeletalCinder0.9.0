@@ -91,7 +91,7 @@ public:
     return ci::geom::Primitive::TRIANGLES;
   }
   
-	uint8_t	getAttribDims(const ci::geom::Attrib attr) const {
+	uint8_t	getAttribDims(ci::geom::Attrib attr) const {
     switch (attr) {
     case ci::geom::Attrib::POSITION:
       return 3;
