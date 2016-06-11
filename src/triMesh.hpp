@@ -9,6 +9,16 @@
 #include <vector>
 
 
+#if defined (CINDER_COCOA_TOUCH)
+// FIXME:ivec4をシェーダーに送れない(原因調査中)
+using index_t   = ci::vec4;
+using element_t = uint16_t;
+#else
+using index_t   = ci::ivec4;
+using element_t = uint32_t;
+#endif
+
+
 class TriMesh : public ci::geom::Source {
   std::vector<ci::vec3> positions;
   std::vector<ci::vec3> normals;
@@ -17,8 +27,8 @@ class TriMesh : public ci::geom::Source {
 
   std::vector<uint32_t> indices;
   
-  std::vector<ci::ivec4> bone_indices;
-  std::vector<ci::vec4>  bone_weights;
+  std::vector<index_t>  bone_indices;
+  std::vector<ci::vec4> bone_weights;
   
 
 public:
@@ -45,7 +55,13 @@ public:
   }
 
   void appendBoneIndices(const std::vector<ci::ivec4>& values) {
+#if defined (CINDER_COCOA_TOUCH)
+    for (const auto& v : values) {
+      bone_indices.push_back(ci::vec4(v));
+    }
+#else
     bone_indices = values;
+#endif
   }
 
   void appendBoneWeights(const std::vector<ci::vec4>& values) {
@@ -149,7 +165,7 @@ public:
     }
 
     if (getNumIndices()) {
-      target->copyIndices(getPrimitive(), &indices[0], getNumIndices(), 4 /* bytes per index */);
+      target->copyIndices(getPrimitive(), &indices[0], getNumIndices(), sizeof(element_t));
     }
   }
 

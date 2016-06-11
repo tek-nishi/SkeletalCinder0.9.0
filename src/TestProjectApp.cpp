@@ -252,7 +252,8 @@ void AssimpApp::setup() {
   getSignalDidBecomeActive().connect([this](){ touch_num = 0; });
 
   // モデルデータ読み込み
-  model = loadModel(getAssetPath("miku.dae").string());
+  model = loadModel(getAssetPath("sample.dae").string());
+  reverseModelNode(model);
 
   prev_elapsed_time = 0.0;
 
@@ -303,6 +304,120 @@ void AssimpApp::setup() {
   disp_reverse = false;
 
   // シェーダー
+#if defined (CINDER_COCOA_TOUCH)
+  shader_color = gl::GlslProg::create(gl::GlslProg::Format()
+                                      .vertex(CI_GLSL(300 es,
+                                                      uniform mat4 ciModelViewProjection;
+                                                      in vec4 ciPosition;
+                                                      in vec4 ciColor;
+                                                      out vec4 Color;
+                                                      
+                                                      void main(void) {
+                                                        gl_Position	= ciModelViewProjection * ciPosition;
+                                                        Color       = ciColor;
+                                                      }))
+                                      .fragment(CI_GLSL(300 es,
+                                                        precision mediump float;
+                                                        uniform vec4 uColor;
+                                                        in vec4 Color;
+                                                        out vec4 oColor;
+                                                           
+                                                        void main(void) {
+                                                          oColor = uColor;
+                                                        })));
+
+  shader_color_skining = gl::GlslProg::create(gl::GlslProg::Format()
+                                      .vertex(CI_GLSL(300 es,
+                                                      uniform mat4 ciModelViewProjection;
+                                                      const int MAXBONES = 100;
+                                                      uniform mat4 boneMatrices[MAXBONES];
+                                                      in vec4 ciPosition;
+                                                      in vec4 ciColor;
+                                                      in ivec4 ciBoneIndex;
+                                                      in vec4 ciBoneWeight;
+                                                      out vec4 Color;
+                                                      
+                                                      void main(void) {
+                                                        mat4 m;
+                                                        m = boneMatrices[ciBoneIndex.x] * ciBoneWeight.x
+                                                          + boneMatrices[ciBoneIndex.y] * ciBoneWeight.y
+                                                          + boneMatrices[ciBoneIndex.z] * ciBoneWeight.z
+                                                          + boneMatrices[ciBoneIndex.w] * ciBoneWeight.w;
+
+                                                        gl_Position	= ciModelViewProjection * m * ciPosition;
+                                                        Color       = ciColor;
+                                                      }))
+                                      .fragment(CI_GLSL(300 es,
+                                                        precision mediump float;
+                                                        uniform vec4 uColor;
+                                                        in vec4 Color;
+                                                        out vec4 oColor;
+                                                           
+                                                        void main(void) {
+                                                          oColor = uColor;
+                                                        })));
+
+  
+  shader_texture = gl::GlslProg::create(gl::GlslProg::Format()
+                                        .vertex(CI_GLSL(300 es,
+                                                        uniform mat4 ciModelViewProjection;
+                                                        in vec4 ciPosition;
+                                                        in vec2 ciTexCoord0;
+                                                        out vec2 TexCoord0;
+                                                        
+                                                        void main(void) {
+                                                          
+                                                          
+                                                          gl_Position	= ciModelViewProjection * ciPosition;
+                                                          TexCoord0   = ciTexCoord0;
+                                                        }))
+                                        .fragment(CI_GLSL(300 es,
+                                                          precision mediump float;
+                                                          uniform vec4 uColor;
+                                                          uniform sampler2D	uTex0;
+                                                          
+                                                          in vec2  TexCoord0;
+                                                          out vec4 oColor;
+		
+                                                          void main(void) {
+                                                            oColor = texture( uTex0, TexCoord0 ) * uColor;
+                                                          })));
+
+  shader_texture_skining = gl::GlslProg::create(gl::GlslProg::Format()
+                                        .vertex(CI_GLSL(300 es,
+                                                        uniform mat4 ciModelViewProjection;
+                                                        const int MAXBONES = 100;
+                                                        uniform mat4 boneMatrices[MAXBONES];
+                                                        in vec4  ciPosition;
+                                                        in vec2  ciTexCoord0;
+                                                        in ivec4 ciBoneIndex;
+                                                        in vec4  ciBoneWeight;
+                                                        out vec2 TexCoord0;
+                                                        
+                                                        void main(void) {
+                                                          mat4 m;
+                                                          m = boneMatrices[ciBoneIndex.x] * ciBoneWeight.x
+                                                            + boneMatrices[ciBoneIndex.y] * ciBoneWeight.y
+                                                            + boneMatrices[ciBoneIndex.z] * ciBoneWeight.z
+                                                            + boneMatrices[ciBoneIndex.w] * ciBoneWeight.w;
+                                                          
+                                                          gl_Position	= ciModelViewProjection * m * ciPosition;
+                                                          TexCoord0   = ciTexCoord0;
+                                                        }))
+                                        .fragment(CI_GLSL(300 es,
+                                                          precision mediump float;
+                                                          uniform vec4 uColor;
+                                                          uniform sampler2D	uTex0;
+                                                          
+                                                          in vec2  TexCoord0;
+                                                          out vec4 oColor;
+		
+                                                          void main(void) {
+                                                            oColor = texture( uTex0, TexCoord0 ) * uColor;
+                                                          })));
+
+#else
+
   shader_color = gl::GlslProg::create(gl::GlslProg::Format()
                                       .vertex(CI_GLSL(150,
                                                       uniform mat4 ciModelViewProjection;
@@ -315,6 +430,7 @@ void AssimpApp::setup() {
                                                         Color       = ciColor;
                                                       }))
                                       .fragment(CI_GLSL(150,
+                                                        precision mediump float;
                                                         uniform vec4 uColor;
                                                         in vec4 Color;
                                                         out vec4 oColor;
@@ -331,7 +447,7 @@ void AssimpApp::setup() {
                                                       in vec4 ciPosition;
                                                       in vec4 ciColor;
                                                       in ivec4 ciBoneIndex;
-                                                      in vec4  ciBoneWeight;
+                                                      in vec4 ciBoneWeight;
                                                       out vec4 Color;
                                                       
                                                       void main(void) {
@@ -345,6 +461,7 @@ void AssimpApp::setup() {
                                                         Color       = ciColor;
                                                       }))
                                       .fragment(CI_GLSL(150,
+                                                        precision mediump float;
                                                         uniform vec4 uColor;
                                                         in vec4 Color;
                                                         out vec4 oColor;
@@ -368,6 +485,7 @@ void AssimpApp::setup() {
                                                           TexCoord0   = ciTexCoord0;
                                                         }))
                                         .fragment(CI_GLSL(150,
+                                                          precision mediump float;
                                                           uniform vec4 uColor;
                                                           uniform sampler2D	uTex0;
                                                           
@@ -400,6 +518,7 @@ void AssimpApp::setup() {
                                                           TexCoord0   = ciTexCoord0;
                                                         }))
                                         .fragment(CI_GLSL(150,
+                                                          precision mediump float;
                                                           uniform vec4 uColor;
                                                           uniform sampler2D	uTex0;
                                                           
@@ -409,6 +528,9 @@ void AssimpApp::setup() {
                                                           void main(void) {
                                                             oColor = texture( uTex0, TexCoord0 ) * uColor;
                                                           })));
+
+#endif
+  
   
   // ダイアログ作成
   createDialog();
@@ -687,7 +809,10 @@ void AssimpApp::draw() {
             shader_color, shader_texture,
             shader_color_skining, shader_texture_skining);
 
+#if !defined (CINDER_COCOA_TOUCH)
+  // FIXME:iOSだと劇重
   if (do_disp_grid) drawGrid();
+#endif
 
   // ダイアログ表示
   drawDialog();
