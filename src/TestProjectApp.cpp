@@ -254,7 +254,7 @@ void AssimpApp::setup() {
   getSignalDidBecomeActive().connect([this](){ touch_num = 0; });
 
   // モデルデータ読み込み
-  model = loadModel(getAssetPath("untitled.dae").string());
+  model = loadModel(getAssetPath("test.dae").string());
   reverseModelNode(model);
 
   prev_elapsed_time = 0.0;
@@ -583,7 +583,7 @@ void AssimpApp::draw() {
 
   gl::translate(offset);
 
-  shader_color->uniform("uColor", ColorAf(1, 1, 1, 1));
+  // shader_color->uniform("uColor", ColorAf(1, 1, 1, 1));
   shader_color->uniform("light_ambient",  light.ambient);
   shader_color->uniform("light_diffuse",  light.diffuse);
   shader_color->uniform("light_specular", light.specular);
