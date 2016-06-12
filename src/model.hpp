@@ -325,6 +325,11 @@ void drawModel(const Model& model,
           texture_skin->bind();
         }
         else {
+          texture->uniform("mat_ambient",   material.ambient);
+          texture->uniform("mat_diffuse",   material.diffuse);
+          texture->uniform("mat_specular",  material.specular);
+          texture->uniform("mat_shininess", material.shininess);
+          texture->uniform("mat_emission",  material.emission);
           texture->bind();
         }
       }
