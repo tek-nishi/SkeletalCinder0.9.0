@@ -42,8 +42,9 @@ struct Mesh {
   bool has_bone;
 
   std::vector<Bone> bones;
-
   std::vector<ci::mat4> bone_matrices;
+
+  u_int shader_index;
 };
 
 

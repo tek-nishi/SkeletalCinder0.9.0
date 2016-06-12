@@ -21,7 +21,6 @@ struct Material {
   float shininess;
   ci::ColorA emission;
   
-  
   bool has_texture;
   std::string texture_name;
 };

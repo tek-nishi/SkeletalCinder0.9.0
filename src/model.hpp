@@ -39,6 +39,9 @@
 #include "animation.hpp"
 
 
+using ShaderHolder = std::map<u_int, ci::gl::GlslProgRef>;
+
+
 struct Model {
   std::vector<Material> material;
 
@@ -305,11 +308,64 @@ Model loadModel(const std::string& path) {
 }
 
 
+// マテリアルからシェーダーを想定して読み込む
+void loadShader(ShaderHolder& shaders, Model& model) {
+  for (auto& node : model.node_list) {
+    if (node->mesh.empty()) continue;
+
+    for (auto& mesh : node->mesh) {
+      const auto& material = model.material[mesh.material_index];
+
+      // メッシュとノードの情報からシェーダーを決める
+      //   0 ~ 7のIDを計算
+      enum {
+        HAS_BONE         = 1 << 0,
+        HAS_VERTEX_COLOR = 1 << 1,
+        HAS_TEXTURE      = 1 << 2,
+      };
+
+      u_int shader_index = 0;
+      if (mesh.has_bone)         shader_index += HAS_BONE;
+      if (mesh.has_vertex_color) shader_index += HAS_VERTEX_COLOR;
+      if (material.has_texture)  shader_index += HAS_TEXTURE;
+
+      mesh.shader_index = shader_index;
+
+      // 読み込み済みなら次へ
+      if (shaders.count(shader_index)) continue;
+
+      struct ShaderInfo {
+        std::string vertex_shader;
+        std::string fragment_shader;
+      };
+      ShaderInfo shader_info[] = {
+        { "color_light",          "color" },
+        { "color_light_skining",  "color" },
+          
+        { "vertex_light",         "color" },
+        { "vertex_light_skining", "color" },
+          
+        { "texture_light",         "texture_light" },
+        { "texture_light_skining", "texture_light" },
+
+        { "vertex_texture_light",         "texture_light" },
+        { "vertex_texture_light_skining", "texture_light" },
+      };
+
+      const auto& info = shader_info[shader_index];
+      auto shader      = readShader(info.vertex_shader, info.fragment_shader);
+      auto shader_prog = ci::gl::GlslProg::create(shader.first, shader.second);
+
+      shaders.insert(std::make_pair(shader_index, shader_prog));
+    }
+  }
+}
+
+
 // モデル描画
 // TIPS:全ノード最終的な行列が計算されているので、再帰で描画する必要は無い
 void drawModel(const Model& model,
-               const ci::gl::GlslProgRef& color, const ci::gl::GlslProgRef& texture,
-               const ci::gl::GlslProgRef& color_skin, const ci::gl::GlslProgRef& texture_skin) {
+               const ShaderHolder& shader_holder) {
   for (const auto& node : model.node_list) {
     if (node->mesh.empty()) continue;
     ci::gl::pushModelView();
@@ -317,52 +373,29 @@ void drawModel(const Model& model,
 
     for (const auto& mesh : node->mesh) {
       const auto& material = model.material[mesh.material_index];
+      const auto& shader = shader_holder.at(mesh.shader_index);
+
+      shader->uniform("mat_ambient",   material.ambient);
+      shader->uniform("mat_diffuse",   material.diffuse);
+      shader->uniform("mat_specular",  material.specular);
+      shader->uniform("mat_shininess", material.shininess);
+      shader->uniform("mat_emission",  material.emission);
 
       if (material.has_texture) {
         model.textures.at(material.texture_name)->bind();
-        if (mesh.has_bone) {
-          texture_skin->uniform("mat_ambient",   material.ambient);
-          texture_skin->uniform("mat_diffuse",   material.diffuse);
-          texture_skin->uniform("mat_specular",  material.specular);
-          texture_skin->uniform("mat_shininess", material.shininess);
-          texture_skin->uniform("mat_emission",  material.emission);
-          texture_skin->uniform("boneMatrices",  &mesh.bone_matrices[0], mesh.bone_matrices.size());
-          texture_skin->bind();
-        }
-        else {
-          texture->uniform("mat_ambient",   material.ambient);
-          texture->uniform("mat_diffuse",   material.diffuse);
-          texture->uniform("mat_specular",  material.specular);
-          texture->uniform("mat_shininess", material.shininess);
-          texture->uniform("mat_emission",  material.emission);
-          texture->bind();
-        }
       }
-      else {
-        if (mesh.has_bone) {
-          color_skin->uniform("boneMatrices", &mesh.bone_matrices[0], mesh.bone_matrices.size());
-          color_skin->uniform("mat_ambient",   material.ambient);
-          color_skin->uniform("mat_diffuse",   material.diffuse);
-          color_skin->uniform("mat_specular",  material.specular);
-          color_skin->uniform("mat_shininess", material.shininess);
-          color_skin->uniform("mat_emission",  material.emission);
-          color_skin->bind();
-        }
-        else {
-          color->uniform("mat_ambient",   material.ambient);
-          color->uniform("mat_diffuse",   material.diffuse);
-          color->uniform("mat_specular",  material.specular);
-          color->uniform("mat_shininess", material.shininess);
-          color->uniform("mat_emission",  material.emission);
-          color->bind();
-        }
+      if (mesh.has_bone) {
+        shader->uniform("boneMatrices",  &mesh.bone_matrices[0], mesh.bone_matrices.size());
       }
+      shader->bind();
 
       ci::gl::draw(mesh.vbo_mesh);
 
+#f 0
       if (material.has_texture) {
         model.textures.at(material.texture_name)->unbind();
       }
+#endif
       
     }
     ci::gl::popModelView();

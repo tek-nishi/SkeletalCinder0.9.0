@@ -43,10 +43,7 @@ class AssimpApp : public App {
   vec3 translate;
   float z_distance;
 
-  gl::GlslProgRef shader_color;
-  gl::GlslProgRef shader_color_skining;
-  gl::GlslProgRef shader_texture;
-  gl::GlslProgRef shader_texture_skining;
+  ShaderHolder shader_holder;
   
   Model model;
   vec3 offset;
@@ -255,8 +252,8 @@ void AssimpApp::setup() {
 
   // モデルデータ読み込み
   model = loadModel(getAssetPath("test.dae").string());
-  reverseModelNode(model);
-
+  loadShader(shader_holder, model);
+  
   prev_elapsed_time = 0.0;
 
   do_animetion = true;
@@ -301,24 +298,6 @@ void AssimpApp::setup() {
 
   two_sided    = false;
   disp_reverse = false;
-
-  // シェーダー読み込み
-  {
-    auto shader  = readShader("color_light", "color");
-    shader_color = gl::GlslProg::create(shader.first, shader.second);
-  }
-  {
-    auto shader          = readShader("color_light_skining", "color");
-    shader_color_skining = gl::GlslProg::create(shader.first, shader.second);
-  }
-  {
-    auto shader    = readShader("texture_light", "texture_light");
-    shader_texture = gl::GlslProg::create(shader.first, shader.second);
-  }
-  {
-    auto shader            = readShader("texture_light_skining", "texture_light");
-    shader_texture_skining = gl::GlslProg::create(shader.first, shader.second);
-  }
   
   // ダイアログ作成
   createDialog();
@@ -342,6 +321,7 @@ void AssimpApp::fileDrop(FileDropEvent event) {
   console() << "Load: " << path[0] << std::endl;
 
   model = loadModel(path[0].string());
+  loadShader(shader_holder, model);
 
   // 読み込んだモデルがなんとなく中心に表示されるよう調整
   offset = -model.aabb.getCenter();
@@ -583,32 +563,14 @@ void AssimpApp::draw() {
 
   gl::translate(offset);
 
-  // shader_color->uniform("uColor", ColorAf(1, 1, 1, 1));
-  shader_color->uniform("light_ambient",  light.ambient);
-  shader_color->uniform("light_diffuse",  light.diffuse);
-  shader_color->uniform("light_specular", light.specular);
-  shader_color->uniform("light_position", light.position);
-
-  shader_color_skining->uniform("light_ambient",  light.ambient);
-  shader_color_skining->uniform("light_diffuse",  light.diffuse);
-  shader_color_skining->uniform("light_specular", light.specular);
-  shader_color_skining->uniform("light_position", light.position);
-
-  shader_texture->uniform("light_ambient",  light.ambient);
-  shader_texture->uniform("light_diffuse",  light.diffuse);
-  shader_texture->uniform("light_specular", light.specular);
-  shader_texture->uniform("light_position", light.position);
-  shader_texture->uniform("uTex0", 0);
-
-  shader_texture_skining->uniform("light_ambient",  light.ambient);
-  shader_texture_skining->uniform("light_diffuse",  light.diffuse);
-  shader_texture_skining->uniform("light_specular", light.specular);
-  shader_texture_skining->uniform("light_position", light.position);
-  shader_texture_skining->uniform("uTex0", 0);
+  for (const auto& shader : shader_holder) {
+    shader.second->uniform("light_ambient",  light.ambient);
+    shader.second->uniform("light_diffuse",  light.diffuse);
+    shader.second->uniform("light_specular", light.specular);
+    shader.second->uniform("light_position", light.position);
+  }
   
-  drawModel(model,
-            shader_color, shader_texture,
-            shader_color_skining, shader_texture_skining);
+  drawModel(model, shader_holder);
 
 #if !defined (CINDER_COCOA_TOUCH)
   // FIXME:iOSだと劇重
