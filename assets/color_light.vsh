@@ -38,8 +38,10 @@ void main(void) {
   
   gl_Position = position;
 
-  Color = mat_diffuse * light_diffuse * diffuse
-        + mat_specular * light_specular * specular
-        + mat_ambient * light_ambient
-        + mat_emission;
+  Color = clamp(mat_diffuse  * light_diffuse  * diffuse
+              + mat_specular * light_specular * specular
+              + mat_ambient  * light_ambient
+              + mat_emission,
+                vec4(0.0f, 0.0f, 0.0f, 0.0f),
+                vec4(1.0f, 1.0f, 1.0f, 1.0f));
 }

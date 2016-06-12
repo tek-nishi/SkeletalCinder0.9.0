@@ -321,7 +321,12 @@ void drawModel(const Model& model,
       if (material.has_texture) {
         model.textures.at(material.texture_name)->bind();
         if (mesh.has_bone) {
-          texture_skin->uniform("boneMatrices", &mesh.bone_matrices[0], mesh.bone_matrices.size());
+          texture_skin->uniform("mat_ambient",   material.ambient);
+          texture_skin->uniform("mat_diffuse",   material.diffuse);
+          texture_skin->uniform("mat_specular",  material.specular);
+          texture_skin->uniform("mat_shininess", material.shininess);
+          texture_skin->uniform("mat_emission",  material.emission);
+          texture_skin->uniform("boneMatrices",  &mesh.bone_matrices[0], mesh.bone_matrices.size());
           texture_skin->bind();
         }
         else {
@@ -336,6 +341,11 @@ void drawModel(const Model& model,
       else {
         if (mesh.has_bone) {
           color_skin->uniform("boneMatrices", &mesh.bone_matrices[0], mesh.bone_matrices.size());
+          color_skin->uniform("mat_ambient",   material.ambient);
+          color_skin->uniform("mat_diffuse",   material.diffuse);
+          color_skin->uniform("mat_specular",  material.specular);
+          color_skin->uniform("mat_shininess", material.shininess);
+          color_skin->uniform("mat_emission",  material.emission);
           color_skin->bind();
         }
         else {

@@ -589,7 +589,6 @@ void AssimpApp::draw() {
   shader_color->uniform("light_specular", light.specular);
   shader_color->uniform("light_position", light.position);
 
-  shader_color_skining->uniform("uColor", ColorAf(1, 1, 1));
   shader_color_skining->uniform("light_ambient",  light.ambient);
   shader_color_skining->uniform("light_diffuse",  light.diffuse);
   shader_color_skining->uniform("light_specular", light.specular);

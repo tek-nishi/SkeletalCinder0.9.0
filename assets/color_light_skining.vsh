@@ -7,12 +7,18 @@ $version$
 uniform mat4 ciModelViewProjection;
 uniform mat3 ciNormalMatrix;
 
+// ライト
 uniform vec4 light_ambient;
 uniform vec4 light_diffuse;
 uniform vec4 light_specular;
 uniform vec4 light_position;
 
-uniform vec4 uColor;
+// マテリアル
+uniform vec4  mat_ambient;
+uniform vec4  mat_diffuse;
+uniform vec4  mat_specular;
+uniform float mat_shininess;
+uniform vec4  mat_emission;
 
 const int MAXBONES = 100;
 uniform mat4 boneMatrices[MAXBONES];
@@ -40,11 +46,14 @@ void main(void) {
 
   // スペキュラは反射ベクトルを求める方式
   vec3 reflect   = reflect(-light, normal);
-  float specular = pow(max(dot(normal, reflect), 0.0), 80.0f);
+  float specular = pow(max(dot(normal, reflect), 0.0), mat_shininess);
 
   gl_Position	= position;
 
-  Color    = uColor * light_diffuse  * diffuse
-           + uColor * light_specular * specular
-           + uColor * light_ambient;
+  Color = clamp(mat_diffuse  * light_diffuse  * diffuse
+              + mat_specular * light_specular * specular
+              + mat_ambient  * light_ambient
+              + mat_emission,
+                vec4(0.0f, 0.0f, 0.0f, 0.0f),
+                vec4(1.0f, 1.0f, 1.0f, 1.0f));
 }
