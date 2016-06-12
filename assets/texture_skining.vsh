@@ -11,6 +11,7 @@ in vec4  ciPosition;
 in vec2  ciTexCoord0;
 in ivec4 ciBoneIndex;
 in vec4  ciBoneWeight;
+
 out vec2 TexCoord0;
                                                         
 void main(void) {

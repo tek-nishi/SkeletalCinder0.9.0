@@ -254,7 +254,8 @@ void AssimpApp::setup() {
   getSignalDidBecomeActive().connect([this](){ touch_num = 0; });
 
   // モデルデータ読み込み
-  model = loadModel(getAssetPath("miku_anime.dae").string());
+  model = loadModel(getAssetPath("untitled.dae").string());
+  reverseModelNode(model);
 
   prev_elapsed_time = 0.0;
 
@@ -285,9 +286,9 @@ void AssimpApp::setup() {
   camera_ui.setViewDirection(vec3{ 0.0f, 0.0f, -1.0f });
 
   // ライトの設定
-  ambient   = Color(0.0, 0.0, 0.0);
+  ambient   = Color(0.3, 0.3, 0.3);
   diffuse   = Color(0.9, 0.9, 0.9);
-  specular  = Color(0.5, 0.5, 0.6);
+  specular  = Color(0.5, 0.5, 0.5);
   direction = vec3(0, 0, 1);
   
   light.setAmbient(ambient);
@@ -307,7 +308,7 @@ void AssimpApp::setup() {
     shader_color = gl::GlslProg::create(shader.first, shader.second);
   }
   {
-    auto shader          = readShader("color_skining", "color_skining");
+    auto shader          = readShader("color_light_skining", "color");
     shader_color_skining = gl::GlslProg::create(shader.first, shader.second);
   }
   {
@@ -315,7 +316,7 @@ void AssimpApp::setup() {
     shader_texture = gl::GlslProg::create(shader.first, shader.second);
   }
   {
-    auto shader            = readShader("texture_skining", "texture_skining");
+    auto shader            = readShader("texture_light_skining", "texture_light");
     shader_texture_skining = gl::GlslProg::create(shader.first, shader.second);
   }
   
@@ -589,6 +590,10 @@ void AssimpApp::draw() {
   shader_color->uniform("light_position", light.position);
 
   shader_color_skining->uniform("uColor", ColorAf(1, 1, 1));
+  shader_color_skining->uniform("light_ambient",  light.ambient);
+  shader_color_skining->uniform("light_diffuse",  light.diffuse);
+  shader_color_skining->uniform("light_specular", light.specular);
+  shader_color_skining->uniform("light_position", light.position);
 
   shader_texture->uniform("light_ambient",  light.ambient);
   shader_texture->uniform("light_diffuse",  light.diffuse);
@@ -596,7 +601,10 @@ void AssimpApp::draw() {
   shader_texture->uniform("light_position", light.position);
   shader_texture->uniform("uTex0", 0);
 
-  shader_texture_skining->uniform("uColor", ColorAf(1, 1, 1));
+  shader_texture_skining->uniform("light_ambient",  light.ambient);
+  shader_texture_skining->uniform("light_diffuse",  light.diffuse);
+  shader_texture_skining->uniform("light_specular", light.specular);
+  shader_texture_skining->uniform("light_position", light.position);
   shader_texture_skining->uniform("uTex0", 0);
   
   drawModel(model,
