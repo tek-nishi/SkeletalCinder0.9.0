@@ -391,7 +391,7 @@ void drawModel(const Model& model,
 
       ci::gl::draw(mesh.vbo_mesh);
 
-#f 0
+#if 0
       if (material.has_texture) {
         model.textures.at(material.texture_name)->unbind();
       }
