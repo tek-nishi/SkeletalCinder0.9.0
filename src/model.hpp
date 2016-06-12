@@ -59,11 +59,6 @@ struct Model {
 
   ci::AxisAlignedBox aabb;
 
-  // FIXME:ここで持つべきではない
-  
-
-
-  
 #if defined (USE_FULL_PATH)
   // 読み込みディレクトリ
   std::string directory;

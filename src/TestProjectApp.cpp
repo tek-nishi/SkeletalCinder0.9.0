@@ -10,6 +10,7 @@
 #include <functional>
 #include <sstream>
 
+#include "light.hpp"
 #include "shader.hpp"
 #include "model.hpp"
 
@@ -33,6 +34,8 @@ class AssimpApp : public App {
   Color specular;
   vec3 direction;
 
+  Light light;
+  
   ivec2 mouse_prev_pos;
   int touch_num;
 
@@ -218,12 +221,10 @@ void AssimpApp::createDialog() {
 
   params->addSeparator();
 
-#if 0
-  params->addParam("Ambient", &ambient).updateFn([this](){ light->setAmbient(ambient); });
-  params->addParam("Diffuse", &diffuse).updateFn([this](){ light->setDiffuse(diffuse); });
-  params->addParam("Speculat", &specular).updateFn([this](){ light->setSpecular(specular); });
-  params->addParam("Direction", &direction).updateFn([this](){ light->setDirection(direction); });
-#endif
+  params->addParam("Ambient",   &ambient).updateFn([this](){ light.setAmbient(ambient); });
+  params->addParam("Diffuse",   &diffuse).updateFn([this](){ light.setDiffuse(diffuse); });
+  params->addParam("Speculat",  &specular).updateFn([this](){ light.setSpecular(specular); });
+  params->addParam("Direction", &direction).updateFn([this](){ light.setDirection(direction); });
 
   params->addSeparator();
 
@@ -253,7 +254,7 @@ void AssimpApp::setup() {
   getSignalDidBecomeActive().connect([this](){ touch_num = 0; });
 
   // モデルデータ読み込み
-  model = loadModel(getAssetPath("untitled.dae").string());
+  model = loadModel(getAssetPath("miku_anime.dae").string());
 
   prev_elapsed_time = 0.0;
 
@@ -288,14 +289,11 @@ void AssimpApp::setup() {
   diffuse   = Color(0.9, 0.9, 0.9);
   specular  = Color(0.5, 0.5, 0.6);
   direction = vec3(0, 0, 1);
-
-#if 0
-  light = new gl::Light(gl::Light::DIRECTIONAL, 0);
-  light->setAmbient(ambient);
-  light->setDiffuse(diffuse);
-  light->setSpecular(specular);
-  light->setDirection(direction);
-#endif
+  
+  light.setAmbient(ambient);
+  light.setDiffuse(diffuse);
+  light.setSpecular(specular);
+  light.setDirection(direction);
 
   bg_color = Color(0.7f, 0.7f, 0.7f);
   bg_image = gl::Texture2d::create(loadImage(loadAsset("bg.png")));
@@ -305,7 +303,7 @@ void AssimpApp::setup() {
 
   // シェーダー読み込み
   {
-    auto shader  = readShader("color", "color");
+    auto shader  = readShader("color_light", "color");
     shader_color = gl::GlslProg::create(shader.first, shader.second);
   }
   {
@@ -313,7 +311,7 @@ void AssimpApp::setup() {
     shader_color_skining = gl::GlslProg::create(shader.first, shader.second);
   }
   {
-    auto shader    = readShader("texture", "texture");
+    auto shader    = readShader("texture_light", "texture_light");
     shader_texture = gl::GlslProg::create(shader.first, shader.second);
   }
   {
@@ -584,11 +582,18 @@ void AssimpApp::draw() {
 
   gl::translate(offset);
 
-  shader_color->uniform("uColor", ColorAf(1, 1, 1));
+  shader_color->uniform("uColor", ColorAf(1, 1, 1, 1));
+  shader_color->uniform("light_ambient",  light.ambient);
+  shader_color->uniform("light_diffuse",  light.diffuse);
+  shader_color->uniform("light_specular", light.specular);
+  shader_color->uniform("light_position", light.position);
 
   shader_color_skining->uniform("uColor", ColorAf(1, 1, 1));
 
-  shader_texture->uniform("uColor", ColorAf(1, 1, 1));
+  shader_texture->uniform("light_ambient",  light.ambient);
+  shader_texture->uniform("light_diffuse",  light.diffuse);
+  shader_texture->uniform("light_specular", light.specular);
+  shader_texture->uniform("light_position", light.position);
   shader_texture->uniform("uTex0", 0);
 
   shader_texture_skining->uniform("uColor", ColorAf(1, 1, 1));
@@ -621,12 +626,13 @@ enum {
 };
 
 // アプリのラウンチコード
-CINDER_APP(AssimpApp, RendererGl(RendererGl::Options().msaa(MSAA_VALUE)), [](App::Settings* settings) {
-    // 画面サイズを変更する
-    settings->setWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-    // Retinaディスプレイ有効
-    settings->setHighDensityDisplayEnabled(true);
-
-    // マルチタッチ有効
-    settings->setMultiTouchEnabled(true);
-  })
+CINDER_APP(AssimpApp, RendererGl(RendererGl::Options().msaa(MSAA_VALUE)),
+           [](App::Settings* settings) {
+             // 画面サイズを変更する
+             settings->setWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+             // Retinaディスプレイ有効
+             settings->setHighDensityDisplayEnabled(true);
+             
+             // マルチタッチ有効
+             settings->setMultiTouchEnabled(true);
+           })
