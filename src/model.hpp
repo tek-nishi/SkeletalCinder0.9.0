@@ -358,6 +358,7 @@ void loadShader(ShaderHolder& shaders, Model& model) {
       
       auto shader      = readShader(info.vertex_shader, info.fragment_shader);
       auto shader_prog = ci::gl::GlslProg::create(shader.first, shader.second);
+      shader_prog->uniformBlock("Light", 0);
 
       shaders.insert(std::make_pair(shader_index, shader_prog));
     }
@@ -394,12 +395,9 @@ void drawModel(const Model& model,
 
       ci::gl::draw(mesh.vbo_mesh);
 
-#if 0
       if (material.has_texture) {
         model.textures.at(material.texture_name)->unbind();
       }
-#endif
-      
     }
     ci::gl::popModelView();
   }

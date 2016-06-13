@@ -44,6 +44,7 @@ class AssimpApp : public App {
   float z_distance;
 
   ShaderHolder shader_holder;
+	ci::gl::UboRef ubo_light;
   
   Model model;
   vec3 offset;
@@ -293,6 +294,11 @@ void AssimpApp::setup() {
   light.setSpecular(specular);
   light.setDirection(direction);
 
+  // UBOを使い複数のシェーダーで値を共有
+  ubo_light = gl::Ubo::create(sizeof (Light), &light);
+	ubo_light->bindBufferBase(0);
+
+  
   bg_color = Color(0.7f, 0.7f, 0.7f);
   bg_image = gl::Texture2d::create(loadImage(loadAsset("bg.png")));
 
@@ -563,12 +569,7 @@ void AssimpApp::draw() {
 
   gl::translate(offset);
 
-  for (const auto& shader : shader_holder) {
-    shader.second->uniform("light_ambient",  light.ambient);
-    shader.second->uniform("light_diffuse",  light.diffuse);
-    shader.second->uniform("light_specular", light.specular);
-    shader.second->uniform("light_position", light.position);
-  }
+  ubo_light->copyData(sizeof (Light), &light);
   
   drawModel(model, shader_holder);
 

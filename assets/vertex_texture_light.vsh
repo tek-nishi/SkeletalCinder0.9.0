@@ -7,10 +7,13 @@ uniform mat4 ciModelViewProjection;
 uniform mat3 ciNormalMatrix;
 
 // ライト
-uniform vec4 light_ambient;
-uniform vec4 light_diffuse;
-uniform vec4 light_specular;
-uniform vec4 light_position;
+// TIPS:UBOを利用
+layout (std140) uniform Light {
+  vec4 light_ambient;
+  vec4 light_diffuse;
+  vec4 light_specular;
+  vec4 light_position;
+};
 
 // マテリアル
 uniform vec4  mat_ambient;
