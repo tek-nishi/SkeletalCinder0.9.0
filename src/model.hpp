@@ -386,7 +386,9 @@ void drawModel(const Model& model,
       shader->uniform("mat_emission",  material.emission);
 
       if (material.has_texture) {
-        model.textures.at(material.texture_name)->bind();
+        const auto& texture = model.textures.at(material.texture_name);
+        texture->setWrap(material.wrap_s, material.wrap_t);
+        texture->bind();
       }
       if (mesh.has_bone) {
         shader->uniform("boneMatrices",  &mesh.bone_matrices[0], mesh.bone_matrices.size());

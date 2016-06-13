@@ -23,7 +23,19 @@ struct Material {
   
   bool has_texture;
   std::string texture_name;
+  GLenum wrap_s, wrap_t;
 };
+
+
+GLenum getTextureWrap(const int wrap) {
+  switch (wrap) {
+  // case aiTextureMapMode_Wrap:   return GL_REPEAT;
+  case aiTextureMapMode_Clamp:  return GL_CLAMP_TO_EDGE;
+  // case aiTextureMapMode_Decal:  return ;
+  // case aiTextureMapMode_Mirror: return ;
+  default:                      return GL_REPEAT;
+  }
+}
 
 
 // マテリアルを生成
@@ -60,6 +72,14 @@ Material createMaterial(const aiMaterial* const mat) {
   if (mat->Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0), tex_name) == AI_SUCCESS) {
     material.has_texture  = true;
     material.texture_name = getFilename(std::string(tex_name.C_Str()));
+
+    int map_u;
+    mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_DIFFUSE, 0), map_u);
+    material.wrap_s = getTextureWrap(map_u);
+    
+    int map_v;
+    mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_DIFFUSE, 0), map_v);
+    material.wrap_t = getTextureWrap(map_v);
   }
 
   ci::app::console() << "Diffuse:"   << material.diffuse   << std::endl;
