@@ -1,5 +1,5 @@
 //
-// マテリアルカラー + スキニング + ライティング
+// 頂点カラー + マテリアルカラー + スキニング + ライティング
 // 
 
 $version$
@@ -25,6 +25,7 @@ uniform mat4 boneMatrices[MAXBONES];
 
 in vec4  ciPosition;
 in vec3  ciNormal;
+in vec4  ciColor;
 in ivec4 ciBoneIndex;
 in vec4  ciBoneWeight;
 
@@ -49,10 +50,11 @@ void main(void) {
 
   gl_Position	= position;
 
-  Color = clamp(mat_diffuse  * light_diffuse  * diffuse
-              + mat_specular * light_specular * specular
-              + mat_ambient  * light_ambient
-              + mat_emission,
-                vec4(0.0f, 0.0f, 0.0f, 0.0f),
-                vec4(1.0f, 1.0f, 1.0f, 1.0f));
+  // FIXME:頂点カラーとマテリアル色をどう計算するか悩む
+  Color = ciColor * clamp(mat_diffuse  * light_diffuse  * diffuse
+                        + mat_specular * light_specular * specular
+                        + mat_ambient  * light_ambient
+                        + mat_emission,
+                          vec4(0.0f, 0.0f, 0.0f, 0.0f),
+                          vec4(1.0f, 1.0f, 1.0f, 1.0f));
 }

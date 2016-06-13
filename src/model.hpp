@@ -353,6 +353,9 @@ void loadShader(ShaderHolder& shaders, Model& model) {
       };
 
       const auto& info = shader_info[shader_index];
+
+      ci::app::console() << "read shader:" << info.vertex_shader << "," << info.fragment_shader << std::endl;
+      
       auto shader      = readShader(info.vertex_shader, info.fragment_shader);
       auto shader_prog = ci::gl::GlslProg::create(shader.first, shader.second);
 
