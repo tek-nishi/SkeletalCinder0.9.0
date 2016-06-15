@@ -12,7 +12,12 @@
 
 struct Material {
   Material()
-    : has_texture(false)
+    : diffuse(0.6f, 0.6f, 0.6f, 1.0f),
+      ambient(0.0f, 0.0f, 0.0f, 1.0f),
+      specular(0.0f, 0.0f, 0.0f, 1.0f),
+      shininess(80.0f),
+      emission(0.0f, 0.0f, 0.0f, 1.0f),
+      has_texture(false)
   { }
 
   ci::ColorA diffuse;
@@ -42,6 +47,7 @@ GLenum getTextureWrap(const int wrap) {
 Material createMaterial(const aiMaterial* const mat) {
   Material material;
 
+  // TODO:assimpのエラーをチェックする
   {
     aiColor3D color;
     mat->Get(AI_MATKEY_COLOR_DIFFUSE, color);
@@ -61,6 +67,9 @@ Material createMaterial(const aiMaterial* const mat) {
   }
 
   mat->Get(AI_MATKEY_SHININESS, material.shininess);
+  // TIPS:シェーダー側で「0の0乗」を計算しないようにしている
+  material.shininess = std::max(std::numeric_limits<float>::epsilon(),
+                                material.shininess);
 
   {
     aiColor3D color;
@@ -73,11 +82,11 @@ Material createMaterial(const aiMaterial* const mat) {
     material.has_texture  = true;
     material.texture_name = getFilename(std::string(tex_name.C_Str()));
 
-    int map_u;
+    int map_u = aiTextureMapMode_Wrap;
     mat->Get(AI_MATKEY_MAPPINGMODE_U(aiTextureType_DIFFUSE, 0), map_u);
     material.wrap_s = getTextureWrap(map_u);
     
-    int map_v;
+    int map_v = aiTextureMapMode_Wrap;
     mat->Get(AI_MATKEY_MAPPINGMODE_V(aiTextureType_DIFFUSE, 0), map_v);
     material.wrap_t = getTextureWrap(map_v);
   }
