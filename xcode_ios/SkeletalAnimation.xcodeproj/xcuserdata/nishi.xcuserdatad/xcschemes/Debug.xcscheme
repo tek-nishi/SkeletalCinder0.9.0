@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0610"
+   LastUpgradeVersion = "0730"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00692BCE14FF149000D0A05E"
-               BuildableName = "CinderAssimp2.app"
-               BlueprintName = "CinderAssimp2"
-               ReferencedContainer = "container:CinderAssimp2.xcodeproj">
+               BuildableName = "SkeletalAnimation.app"
+               BlueprintName = "SkeletalAnimation"
+               ReferencedContainer = "container:SkeletalAnimation.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "00692BCE14FF149000D0A05E"
-            BuildableName = "CinderAssimp2.app"
-            BlueprintName = "CinderAssimp2"
-            ReferencedContainer = "container:CinderAssimp2.xcodeproj">
+            BuildableName = "SkeletalAnimation.app"
+            BlueprintName = "SkeletalAnimation"
+            ReferencedContainer = "container:SkeletalAnimation.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -56,9 +56,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "00692BCE14FF149000D0A05E"
-            BuildableName = "CinderAssimp2.app"
-            BlueprintName = "CinderAssimp2"
-            ReferencedContainer = "container:CinderAssimp2.xcodeproj">
+            BuildableName = "SkeletalAnimation.app"
+            BlueprintName = "SkeletalAnimation"
+            ReferencedContainer = "container:SkeletalAnimation.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>
@@ -75,9 +75,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "00692BCE14FF149000D0A05E"
-            BuildableName = "CinderAssimp2.app"
-            BlueprintName = "CinderAssimp2"
-            ReferencedContainer = "container:CinderAssimp2.xcodeproj">
+            BuildableName = "SkeletalAnimation.app"
+            BlueprintName = "SkeletalAnimation"
+            ReferencedContainer = "container:SkeletalAnimation.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
