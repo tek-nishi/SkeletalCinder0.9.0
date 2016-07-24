@@ -28,7 +28,7 @@ Cinderはもとより、Assimpのインクルードファイルとライブラ�
 + iOSはOpenGL ES3.0で動いています。プリプロセッサにCINDER_GL_ES_3を追加してCinderを再ビルドしてください。
 
 
-## Liense
+## License
 License All source code files are licensed under the MPLv2.0 license
 
 [MPLv2.0](https://www.mozilla.org/MPL/2.0/)
